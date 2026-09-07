@@ -76,13 +76,23 @@ A migração `003_seed_convidados.sql` carrega a lista de `server/data/lista_con
 (idempotente — conflito em `qrcode` atualiza os campos). Para reimportar sem
 redeploy: `npm run convidados:import [caminho.csv]` ou `POST /api/guests/import`.
 
-| `gifts` | |
-|---|---|
-| `id` | PK |
-| `guest_user_id` | FK → `guests.id` (ON DELETE CASCADE) |
-| `gift_name` | nome da cota presenteada |
-| `value` | valor em reais |
-| `created_at` | |
+| `gifts` | | migração |
+|---|---|---|
+| `id` | PK | 001 |
+| `guest_user_id` | FK → `guests.id` (ON DELETE CASCADE) | 001 |
+| `gift_name` | nome da cota presenteada | 001 |
+| `value` | valor em reais | 001 |
+| `created_at` | | 001 |
+
+| `confirmacoes` (RSVP) | | migração |
+|---|---|---|
+| `id` | UUID (`gen_random_uuid()`) | 004 |
+| `guest_id` | FK → `guests.id` (ON DELETE CASCADE) | 004 |
+| `confirmacao_datetime` | `TIMESTAMPTZ DEFAULT now()` | 004 |
+| `status` | `ACTIVE` \| `CANCELLED` — no máx. 1 `ACTIVE` por convidado | 004 |
+
+Helpers em `db.js`: `confirmarPresenca(guestId)` (cancela a anterior e cria nova),
+`cancelarConfirmacao(guestId)`, `confirmacaoDoConvidado(guestId)`.
 
 ## Endpoints
 

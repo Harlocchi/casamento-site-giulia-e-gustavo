@@ -239,3 +239,50 @@ export async function presentesDoConvidado(guestUserId) {
   );
   return rows;
 }
+
+/* ------------------------------------------------------------------ *
+ *  Confirmações de presença (RSVP)
+ * ------------------------------------------------------------------ */
+const COLS_CONFIRMACAO = "id, guest_id, confirmacao_datetime, status";
+
+// confirmação ACTIVE atual do convidado (ou null)
+export async function confirmacaoDoConvidado(guestId) {
+  const { rows } = await q(
+    `SELECT ${COLS_CONFIRMACAO} FROM confirmacoes
+     WHERE guest_id = $1 AND status = 'ACTIVE'
+     ORDER BY confirmacao_datetime DESC LIMIT 1`,
+    [Number(guestId)]
+  );
+  return rows[0] || null;
+}
+
+// cancela a ACTIVE anterior (se houver) e cria uma nova — idempotente na prática
+export async function confirmarPresenca(guestId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      "UPDATE confirmacoes SET status = 'CANCELLED' WHERE guest_id = $1 AND status = 'ACTIVE'",
+      [Number(guestId)]
+    );
+    const { rows } = await client.query(
+      `INSERT INTO confirmacoes (guest_id) VALUES ($1) RETURNING ${COLS_CONFIRMACAO}`,
+      [Number(guestId)]
+    );
+    await client.query("COMMIT");
+    return rows[0];
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+export async function cancelarConfirmacao(guestId) {
+  const { rowCount } = await q(
+    "UPDATE confirmacoes SET status = 'CANCELLED' WHERE guest_id = $1 AND status = 'ACTIVE'",
+    [Number(guestId)]
+  );
+  return { cancelada: rowCount > 0 };
+}
