@@ -1,0 +1,5 @@
+.env
+server/.env
+**/node_modules/
+server/dados/
+**/.claude/settings.local.json

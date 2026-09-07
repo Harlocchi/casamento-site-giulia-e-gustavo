@@ -1,0 +1,23 @@
+{
+  "name": "casamento-gustavo-giulia-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend Node do site de casamento — integração Pix com a AbacatePay (a chave secreta fica só aqui).",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "migrate": "node migrate.js",
+    "migrate:status": "node migrate.js status",
+    "produtos:sync": "node scripts/sync-produtos.mjs",
+    "produtos:preview": "node scripts/sync-produtos.mjs --dry-run"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.23.0"
+  }
+}

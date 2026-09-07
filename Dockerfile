@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Dependências do backend (só produção). --prefix roda dentro de ./server sem 'cd'.
-RUN npm ci --omit=dev --prefix server
+RUN npm install --omit=dev --no-audit --no-fund --prefix server
 
 ENV NODE_ENV=production
 ENV PORT=8080
