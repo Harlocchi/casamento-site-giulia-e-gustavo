@@ -60,14 +60,21 @@ docker run -d --name casamento-pg -e POSTGRES_PASSWORD=postgres \
 # DATABASE_SSL=disable
 ```
 
-**Tabelas** (migração `001_init.sql`):
+**Tabelas:**
 
-| `guests` | |
-|---|---|
-| `id` | PK |
-| `name` | nome do convidado |
-| `qrcode` | código de 6 caracteres, único, sem letras/números ambíguos (`O 0 I 1 L`) |
-| `created_at` | |
+| `guests` | | migração |
+|---|---|---|
+| `id` | PK | 001 |
+| `name` | nome do convidado (planilha: `Nome`) | 001 |
+| `qrcode` | código do convite, único (planilha: `code`) | 001 |
+| `numero` | nº do convidado na planilha (`Numero`), único | 002 |
+| `go_sit` | bool — vai à cerimônia / confirmado na planilha | 002 |
+| `is_padrinho` | bool — padrinho/madrinha | 002 |
+| `created_at` | | 001 |
+
+A migração `003_seed_convidados.sql` carrega a lista de `server/data/lista_convidados.csv`
+(idempotente — conflito em `qrcode` atualiza os campos). Para reimportar sem
+redeploy: `npm run convidados:import [caminho.csv]` ou `POST /api/guests/import`.
 
 | `gifts` | |
 |---|---|
@@ -85,7 +92,8 @@ docker run -d --name casamento-pg -e POSTGRES_PASSWORD=postgres \
 | `GET` | `/api/checkout/status/:id` | status do checkout (`PENDING`/`PAID`/…), método e nº de parcelas |
 | `POST` | `/api/webhook/abacatepay?webhookSecret=...` | `checkout.completed` → grava em `presentes.jsonl` (e em `gifts` se veio `qrcode`) |
 | `POST` | `/api/guests` | **[admin]** cadastra convidado, gera o `qrcode` → `{ id, name, qrcode }` |
-| `GET` | `/api/guests` | **[admin]** lista convidados + total já presenteado |
+| `POST` | `/api/guests/import` | **[admin]** carga em lote — `{ guests: [{ numero, nome, code, go_sit, is_padrinho }] }` (casa por `code`) |
+| `GET` | `/api/guests` | **[admin]** lista convidados (+ `numero`, `go_sit`, `is_padrinho`, total presenteado) |
 | `GET` | `/api/guests/:qrcode` | público — o convidado consulta o próprio cadastro e presentes |
 | `GET` | `/api/presentes` | **[admin]** log de quem já presenteou |
 | `POST` | `/api/rsvp` | confirmação de presença (opcional) |

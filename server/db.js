@@ -154,9 +154,12 @@ export async function criarConvidado(name) {
   throw new Error("Não foi possível gerar um qrcode único.");
 }
 
+const COLS_CONVIDADO =
+  "id, numero, name, qrcode, go_sit, is_padrinho, created_at";
+
 export async function buscarConvidado(id) {
   const { rows } = await q(
-    "SELECT id, name, qrcode, created_at FROM guests WHERE id = $1",
+    `SELECT ${COLS_CONVIDADO} FROM guests WHERE id = $1`,
     [id]
   );
   return rows[0] || null;
@@ -164,23 +167,58 @@ export async function buscarConvidado(id) {
 
 export async function buscarConvidadoPorQrcode(qrcode) {
   const { rows } = await q(
-    "SELECT id, name, qrcode, created_at FROM guests WHERE qrcode = $1",
-    [String(qrcode || "").trim()]
+    `SELECT ${COLS_CONVIDADO} FROM guests WHERE qrcode = $1`,
+    [String(qrcode || "").trim().toUpperCase()]
   );
   return rows[0] || null;
 }
 
 export async function listarConvidados() {
   const { rows } = await q(
-    `SELECT g.id, g.name, g.qrcode, g.created_at,
+    `SELECT g.id, g.numero, g.name, g.qrcode, g.go_sit, g.is_padrinho, g.created_at,
             COUNT(gi.id)::int          AS gifts_count,
             COALESCE(SUM(gi.value), 0) AS gifts_total
      FROM guests g
      LEFT JOIN gifts gi ON gi.guest_user_id = g.id
      GROUP BY g.id
-     ORDER BY g.name`
+     ORDER BY g.numero NULLS LAST, g.name`
   );
   return rows;
+}
+
+/* Carga/atualização em lote — casa por `qrcode` (o código do convite).
+ * Aceita chaves da planilha (Numero/Nome/code) ou já normalizadas. */
+export async function importarConvidados(linhas) {
+  const toBool = (v) =>
+    ["true", "1", "t", "sim", "yes"].includes(String(v).trim().toLowerCase());
+
+  let importados = 0;
+  const ignorados = [];
+  for (const l of linhas || []) {
+    const qrcode = String(l.code ?? l.qrcode ?? "").trim().toUpperCase();
+    const name = String(l.name ?? l.nome ?? l.Nome ?? "").trim();
+    if (!qrcode || !name) {
+      ignorados.push(l);
+      continue;
+    }
+    const numero = Number(l.numero ?? l.Numero);
+    await q(
+      `INSERT INTO guests (numero, name, qrcode, go_sit, is_padrinho)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (qrcode) DO UPDATE SET
+         numero = EXCLUDED.numero, name = EXCLUDED.name,
+         go_sit = EXCLUDED.go_sit, is_padrinho = EXCLUDED.is_padrinho`,
+      [
+        Number.isFinite(numero) ? numero : null,
+        name.slice(0, 200),
+        qrcode.slice(0, 32),
+        toBool(l.go_sit ?? true),
+        toBool(l.is_padrinho ?? false),
+      ]
+    );
+    importados++;
+  }
+  return { importados, ignorados: ignorados.length };
 }
 
 /* ------------------------------------------------------------------ *

@@ -8,6 +8,7 @@ import "dotenv/config";
 import {
   migrate,
   criarConvidado,
+  importarConvidados,
   listarConvidados,
   buscarConvidadoPorQrcode,
   registrarPresente,
@@ -165,6 +166,23 @@ app.post("/api/guests", exigirAdmin, async (req, res) => {
     res.status(201).json(convidado); // { id, name, qrcode }
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Carga em lote da lista de convidados  [admin]
+// body: { guests: [ { numero, name|nome|Nome, code|qrcode, go_sit, is_padrinho } ] }
+// Casa por `qrcode` (o código do convite): quem já existe é atualizado.
+app.post("/api/guests/import", exigirAdmin, async (req, res) => {
+  const linhas = Array.isArray(req.body?.guests) ? req.body.guests : null;
+  if (!linhas || !linhas.length) {
+    return res.status(400).json({ error: "Envie { guests: [ ... ] }." });
+  }
+  try {
+    const r = await importarConvidados(linhas);
+    res.json({ ...r, total: linhas.length });
+  } catch (err) {
+    console.error("guests/import:", err.message);
+    res.status(500).json({ error: "Falha ao importar." });
   }
 });
 

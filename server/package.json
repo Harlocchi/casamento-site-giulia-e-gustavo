@@ -10,7 +10,8 @@
     "migrate": "node migrate.js",
     "migrate:status": "node migrate.js status",
     "produtos:sync": "node scripts/sync-produtos.mjs",
-    "produtos:preview": "node scripts/sync-produtos.mjs --dry-run"
+    "produtos:preview": "node scripts/sync-produtos.mjs --dry-run",
+    "convidados:import": "node scripts/import-convidados.mjs"
   },
   "engines": {
     "node": ">=18.17"
