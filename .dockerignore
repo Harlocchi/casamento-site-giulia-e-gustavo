@@ -1,5 +1,8 @@
 .git
+.gitignore
 **/node_modules
+server/node_modules
 server/dados
 server/.env
+.env
 *.md
