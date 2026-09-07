@@ -1,0 +1,17 @@
+FOTOS DOS PRESENTES
+===================
+
+As imagens dos cards da lista de presentes ficam aqui.
+
+Cada cota no index.html aponta para o arquivo pelo campo "foto", ex.:
+    foto: "fotos/jantar.jpg"
+
+Para trocar/adicionar uma foto:
+  1. coloque o arquivo nesta pasta (jpg, jpeg, png ou webp);
+  2. no index.html, procure "const COTAS" e ajuste o "foto" da cota
+     (ou adicione a linha, se ela ainda não tiver).
+
+Tamanho ideal: ~600x450 px (4:3). Maior funciona, o site corta.
+Cota sem "foto" cai numa imagem por palavra-chave e, offline, no emoji.
+
+Cotas ainda SEM foto:  lua-de-mel · controles · jantar-1mes · maracujina

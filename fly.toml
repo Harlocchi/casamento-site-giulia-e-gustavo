@@ -1,0 +1,25 @@
+# Fly.io — 1 app, 1 máquina. Troque "app" por um nome único seu.
+app = "casamento-gustavo-giulia"
+primary_region = "gru" # São Paulo
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  DATABASE_SSL = "require" # Postgres gerenciado (Neon/Supabase) usa TLS
+  ABACATEPAY_DEV = "0"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_start_machines = true
+  # "suspend" = congela a RAM quando ocioso e volta em ~200ms no próximo request
+  # (inclusive o webhook da AbacatePay). Troque por  false  + min_machines_running = 1
+  # se quiser 0 cold start (aí custa ~US$2/mês).
+  auto_stop_machines = "suspend"
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
