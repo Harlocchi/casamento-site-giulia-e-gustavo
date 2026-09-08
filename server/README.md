@@ -70,6 +70,7 @@ docker run -d --name casamento-pg -e POSTGRES_PASSWORD=postgres \
 | `numero` | nº do convidado na planilha (`Numero`), único | 002 |
 | `go_sit` | bool — vai à cerimônia / confirmado na planilha | 002 |
 | `is_padrinho` | bool — padrinho/madrinha | 002 |
+| `family_id` | FK → `guest_family.id` (null = sem família) | 006 |
 | `created_at` | | 001 |
 
 A migração `003_seed_convidados.sql` carrega a lista de `server/data/lista_convidados.csv`

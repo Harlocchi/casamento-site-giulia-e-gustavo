@@ -154,34 +154,46 @@ export async function criarConvidado(name) {
   throw new Error("Não foi possível gerar um qrcode único.");
 }
 
-const COLS_CONVIDADO =
-  "id, numero, name, qrcode, go_sit, is_padrinho, created_at";
+const SELECT_CONVIDADO = `
+  SELECT g.id, g.numero, g.name, g.qrcode, g.go_sit, g.is_padrinho,
+         g.family_id, f.name AS family_name, g.created_at
+  FROM guests g
+  LEFT JOIN guest_family f ON f.id = g.family_id`;
 
 export async function buscarConvidado(id) {
-  const { rows } = await q(
-    `SELECT ${COLS_CONVIDADO} FROM guests WHERE id = $1`,
-    [id]
-  );
+  const { rows } = await q(`${SELECT_CONVIDADO} WHERE g.id = $1`, [id]);
   return rows[0] || null;
 }
 
 export async function buscarConvidadoPorQrcode(qrcode) {
-  const { rows } = await q(
-    `SELECT ${COLS_CONVIDADO} FROM guests WHERE qrcode = $1`,
-    [String(qrcode || "").trim().toUpperCase()]
-  );
+  const { rows } = await q(`${SELECT_CONVIDADO} WHERE g.qrcode = $1`, [
+    String(qrcode || "").trim().toUpperCase(),
+  ]);
   return rows[0] || null;
 }
 
 export async function listarConvidados() {
   const { rows } = await q(
-    `SELECT g.id, g.numero, g.name, g.qrcode, g.go_sit, g.is_padrinho, g.created_at,
+    `SELECT g.id, g.numero, g.name, g.qrcode, g.go_sit, g.is_padrinho,
+            g.family_id, f.name AS family_name, g.created_at,
             COUNT(gi.id)::int          AS gifts_count,
             COALESCE(SUM(gi.value), 0) AS gifts_total
      FROM guests g
+     LEFT JOIN guest_family f ON f.id = g.family_id
      LEFT JOIN gifts gi ON gi.guest_user_id = g.id
-     GROUP BY g.id
+     GROUP BY g.id, f.name
      ORDER BY g.numero NULLS LAST, g.name`
+  );
+  return rows;
+}
+
+// todos os convidados de uma família (pelo id da família ou pelo qrcode de um membro)
+export async function familiaDoConvidado(qrcode) {
+  const convidado = await buscarConvidadoPorQrcode(qrcode);
+  if (!convidado?.family_id) return convidado ? [convidado] : [];
+  const { rows } = await q(
+    `${SELECT_CONVIDADO} WHERE g.family_id = $1 ORDER BY g.numero`,
+    [convidado.family_id]
   );
   return rows;
 }
@@ -202,18 +214,23 @@ export async function importarConvidados(linhas) {
       continue;
     }
     const numero = Number(l.numero ?? l.Numero);
+    const famRaw = l.family_id ?? l.familyId;
+    const familyId =
+      famRaw === "" || famRaw == null ? NaN : Number(famRaw);
     await q(
-      `INSERT INTO guests (numero, name, qrcode, go_sit, is_padrinho)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO guests (numero, name, qrcode, go_sit, is_padrinho, family_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (qrcode) DO UPDATE SET
          numero = EXCLUDED.numero, name = EXCLUDED.name,
-         go_sit = EXCLUDED.go_sit, is_padrinho = EXCLUDED.is_padrinho`,
+         go_sit = EXCLUDED.go_sit, is_padrinho = EXCLUDED.is_padrinho,
+         family_id = EXCLUDED.family_id`,
       [
         Number.isFinite(numero) ? numero : null,
         name.slice(0, 200),
         qrcode.slice(0, 32),
         toBool(l.go_sit ?? true),
         toBool(l.is_padrinho ?? false),
+        Number.isFinite(familyId) && familyId > 0 ? familyId : null,
       ]
     );
     importados++;
