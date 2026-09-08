@@ -9,8 +9,10 @@ primary_region = "gru" # São Paulo
 #   fly secrets set DATABASE_URL=... ABACATEPAY_API_KEY=... ABACATEPAY_WEBHOOK_SECRET=... ADMIN_TOKEN=... SITE_URL=...
 [env]
   PORT = "8080"
-  DATABASE_SSL = "require" # Postgres gerenciado (Neon/Supabase/Fly PG) usa TLS
-  ABACATEPAY_DEV = "0"     # 1 aceitaria webhook sem assinatura — nunca em produção
+  # "disable" = o Postgres atual (db-dev.usetracko.com) não tem TLS.
+  # Se trocar por um banco gerenciado (Neon/Supabase/Fly PG), volte para "require".
+  DATABASE_SSL = "disable"
+  ABACATEPAY_DEV = "0" # 1 aceitaria webhook sem assinatura — nunca em produção
 
 [http_service]
   internal_port = 8080
