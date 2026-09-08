@@ -1453,20 +1453,52 @@ function EnvelopeGate({ onOpen }) {
     [codigo, onOpen, pararScan]
   );
 
-  const iniciarScan = useCallback(() => {
+  const iniciarScan = useCallback(async () => {
     setErro("");
-    if (!window.Html5Qrcode) {
-      setErro("Leitor de QR indisponível aqui — digite o código.");
+
+    const seguro =
+      window.isSecureContext ||
+      ["localhost", "127.0.0.1"].includes(location.hostname);
+    if (!seguro) {
+      setErro("A câmera só funciona em https. Digite o código do convite.");
       return;
     }
+    if (!navigator.mediaDevices?.getUserMedia || !window.Html5Qrcode) {
+      setErro("Leitor de QR indisponível nesse navegador — digite o código.");
+      return;
+    }
+
+    // dispara o pedido de autorização da câmera (iOS/Android) e trata a resposta
+    setScan("permissao");
+    try {
+      const teste = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      teste.getTracks().forEach((t) => t.stop()); // já autorizado; o leitor reabre
+    } catch (e) {
+      setScan(false);
+      const n = e && e.name;
+      if (n === "NotAllowedError" || n === "SecurityError")
+        setErro(
+          "Acesso à câmera negado. Libere a câmera para este site nas configurações do navegador — ou digite o código."
+        );
+      else if (n === "NotFoundError" || n === "OverconstrainedError")
+        setErro("Nenhuma câmera encontrada nesse aparelho. Digite o código.");
+      else if (n === "NotReadableError")
+        setErro("A câmera está em uso por outro app. Feche-o e tente de novo.");
+      else setErro("Não consegui acessar a câmera. Digite o código.");
+      return;
+    }
+
     setScan(true);
     setTimeout(async () => {
       try {
-        const inst = new window.Html5Qrcode("qr-reader");
+        const inst = new window.Html5Qrcode("qr-reader", { verbose: false });
         qrRef.current = inst;
         await inst.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: 220 },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
           (texto) => {
             pararScan();
             submeter(extrairCodigo(texto));
@@ -1475,9 +1507,9 @@ function EnvelopeGate({ onOpen }) {
         );
       } catch (e) {
         setScan(false);
-        setErro("Não consegui abrir a câmera. Digite o código.");
+        setErro("Não consegui iniciar a leitura. Digite o código.");
       }
-    }, 60);
+    }, 50);
   }, [pararScan, submeter]);
 
   const fechar = () => {
@@ -1524,7 +1556,13 @@ function EnvelopeGate({ onOpen }) {
             </button>
           </div>
 
-          {scan ? (
+          {scan === "permissao" ? (
+            <div className="mt-6 flex flex-col items-center gap-3 py-4 text-center">
+              <span className="spin" style={{ width: 24, height: 24 }} />
+              <p className="text-sm text-muted">Pedindo acesso à câmera…</p>
+              <p className="text-xs text-muted">Toque em <strong>Permitir</strong> quando o navegador perguntar.</p>
+            </div>
+          ) : scan ? (
             <div className="mt-5 flex flex-col gap-3">
               <div id="qr-reader" />
               <button onClick={pararScan} className="btn btn-ghost">Digitar o código</button>
