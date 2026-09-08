@@ -1,5 +1,5 @@
-# Fly.io — 1 app, 1 máquina. Troque "app" por um nome único seu.
-app = "giuliaegustavo"
+# Fly.io — 1 app, 1 máquina. Tem que bater com o app criado no `fly launch`.
+app = "casamento-site-giulia-e-gustavo"
 primary_region = "gru" # São Paulo
 
 [build]
