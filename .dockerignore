@@ -1,8 +1,12 @@
 .git
 .gitignore
+.github
+.claude
 **/node_modules
 server/node_modules
 server/dados
 server/.env
 .env
 *.md
+fly.toml
+docker-compose.yml

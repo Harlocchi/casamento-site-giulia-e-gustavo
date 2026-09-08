@@ -1,0 +1,43 @@
+# Uso LOCAL apenas (o deploy no Fly.io NÃO usa este arquivo — usa o fly.toml).
+# Sobe o site + a API + um Postgres local:
+#   docker compose up --build
+#   http://localhost:3000
+#
+# Os segredos da AbacatePay vêm do server/.env (não versionado).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: casamento
+      POSTGRES_PASSWORD: casamento
+      POSTGRES_DB: casamento
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casamento -d casamento"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgres://casamento:casamento@db:5432/casamento
+      DATABASE_SSL: "disable"
+      ABACATEPAY_DEV: "1"
+    env_file:
+      - server/.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

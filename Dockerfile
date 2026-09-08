@@ -4,11 +4,13 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# Copia o repositório inteiro (o .dockerignore tira node_modules, .env e logs).
-COPY . .
+# 1) Só os manifestos do backend primeiro — cacheia o npm ci entre builds
+#    enquanto as dependências não mudam.
+COPY server/package.json server/package-lock.json ./server/
+RUN npm ci --omit=dev --no-audit --no-fund --prefix server
 
-# Dependências do backend (só produção). --prefix roda dentro de ./server sem 'cd'.
-RUN npm install --omit=dev --no-audit --no-fund --prefix server
+# 2) O resto do repositório (o .dockerignore tira node_modules, .env e logs).
+COPY . .
 
 ENV NODE_ENV=production
 ENV PORT=8080
