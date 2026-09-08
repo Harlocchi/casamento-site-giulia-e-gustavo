@@ -320,7 +320,134 @@
     to { opacity: 1; transform: none; }
   }
 
+  /* ---------- Portão: envelope + selo de cera (fase 1) ---------- */
+  .gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: clamp(1rem, 5vw, 2.5rem);
+    text-align: center;
+    overflow: hidden;
+    background:
+      radial-gradient(125% 90% at 50% 0%,
+        color-mix(in srgb, var(--accent) 24%, var(--bg)),
+        var(--bg) 70%);
+  }
+  .gate-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    animation: reveal 0.7s ease both;
+  }
+
+  .envelope {
+    position: relative;
+    width: min(84vw, 460px);
+    aspect-ratio: 7 / 5;
+    perspective: 1100px;
+    --paper: color-mix(in srgb, #efe7d6 84%, var(--accent));
+    filter: drop-shadow(0 28px 44px rgba(0, 0, 0, 0.38));
+  }
+  .envelope-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: var(--paper);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07);
+  }
+  .envelope-body::before,
+  .envelope-body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  /* abas laterais/inferior do envelope */
+  .envelope-body::before {
+    background:
+      linear-gradient(46deg, transparent 49.4%, color-mix(in srgb, var(--paper) 82%, #000) 49.6%, color-mix(in srgb, var(--paper) 82%, #000) 50.4%, transparent 50.6%),
+      linear-gradient(-46deg, transparent 49.4%, color-mix(in srgb, var(--paper) 82%, #000) 49.6%, color-mix(in srgb, var(--paper) 82%, #000) 50.4%, transparent 50.6%);
+  }
+  .envelope-flap {
+    position: absolute;
+    left: -1px;
+    right: -1px;
+    top: 0;
+    height: 62%;
+    background: color-mix(in srgb, var(--paper) 90%, #000);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+    transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    z-index: 3;
+  }
+  .wax-seal {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    width: clamp(62px, 15vw, 88px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    color: color-mix(in srgb, var(--accent) 30%, #1a1206);
+    border-radius: 46% 54% 53% 47% / 52% 46% 54% 48%;
+    background:
+      radial-gradient(circle at 33% 28%,
+        color-mix(in srgb, var(--accent) 78%, #fff) 0%,
+        color-mix(in srgb, var(--accent) 92%, #000) 38%,
+        color-mix(in srgb, var(--accent) 55%, #2a1c08) 100%);
+    box-shadow:
+      inset 0 3px 5px rgba(255, 255, 255, 0.45),
+      inset 0 -6px 10px rgba(0, 0, 0, 0.45),
+      inset 0 0 0 4px color-mix(in srgb, var(--accent) 65%, #2a1c08),
+      0 8px 16px rgba(0, 0, 0, 0.35);
+    z-index: 4;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    animation: seal-pulse 2.8s ease-in-out infinite;
+  }
+  /* respingo irregular da cera, atrás do disco */
+  .wax-seal::before {
+    content: "";
+    position: absolute;
+    inset: -9px -7px -6px -8px;
+    z-index: -1;
+    border-radius: 42% 58% 63% 37% / 55% 48% 52% 45%;
+    background: color-mix(in srgb, var(--accent) 62%, #2a1c08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  .wax-seal:hover { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.06); animation: none; }
+  .wax-seal:active { transform: translate(-50%, -50%) scale(0.97); }
+  @keyframes seal-pulse {
+    0%, 100% { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 7px rgba(0,0,0,0.38), 0 6px 14px rgba(0,0,0,0.32), 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); }
+    50%      { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 7px rgba(0,0,0,0.38), 0 6px 14px rgba(0,0,0,0.32), 0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent); }
+  }
+
+  /* estado abrindo */
+  .gate.abrindo { animation: gate-out 0.6s 0.55s cubic-bezier(0.4, 0, 1, 1) forwards; }
+  .gate.abrindo .envelope-flap { transform: rotateX(-172deg); }
+  .gate.abrindo .wax-seal {
+    animation: none;
+    transform: translate(-50%, -50%) scale(0.35) rotate(28deg) translateY(70px);
+    opacity: 0;
+    transition: all 0.4s ease;
+  }
+  @keyframes gate-out {
+    to { opacity: 0; transform: scale(1.05); visibility: hidden; }
+  }
+
+  #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; }
+  #qr-reader video { border-radius: 12px; }
+
   @media (prefers-reduced-motion: reduce) {
+    .wax-seal { animation: none; }
+    .gate.abrindo, .gate.abrindo .envelope-flap, .gate.abrindo .wax-seal { animation: none; transition: none; opacity: 0; }
     html { scroll-behavior: auto; }
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
@@ -345,10 +472,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
 
 <script type="text/babel" data-presets="react">
-const { useState, useEffect, useCallback } = React;
+const { useState, useEffect, useCallback, useRef } = React;
 
 /* ------------------------------------------------------------------ *
  *  Dados do casamento
@@ -563,6 +691,8 @@ const ICONS = {
   arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   menu: '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>',
+  scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
@@ -1252,12 +1382,207 @@ function RsvpModal({ onClose }) {
 }
 
 /* ------------------------------------------------------------------ *
+ *  Portão do convite (fase 1) — só entra quem tem um código válido
+ * ------------------------------------------------------------------ */
+async function validarConvite(code) {
+  const c = String(code || "").trim().toUpperCase();
+  if (c.length < 4) throw new Error("Digite o código do seu convite.");
+  try {
+    const res = await fetch("/api/guests/" + encodeURIComponent(c));
+    if (res.ok) return res.json();
+    if (res.status === 404)
+      throw new Error("Código não encontrado. Confira o seu convite.");
+    throw new Error("Não consegui validar agora. Tente de novo em instantes.");
+  } catch (e) {
+    // ambiente de prévia (sem backend): libera só com o código de demonstração
+    if (e instanceof TypeError && c === "GGDEMO")
+      return { name: "Convidado", qrcode: c };
+    throw e;
+  }
+}
+
+// o QR pode ser só o código ou uma URL tipo .../convite?code=XXXX
+function extrairCodigo(texto) {
+  const s = String(texto || "").trim();
+  const m = s.match(/[?&](?:code|codigo|c)=([A-Za-z0-9]+)/i);
+  if (m) return m[1];
+  return (s.split(/[/?#]/).filter(Boolean).pop() || s).toUpperCase();
+}
+
+function EnvelopeGate({ onOpen }) {
+  const [aberto, setAberto] = useState(false);
+  const [codigo, setCodigo] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [abrindo, setAbrindo] = useState(false);
+  const [scan, setScan] = useState(false);
+  const qrRef = useRef(null);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const pararScan = useCallback(() => {
+    setScan(false);
+    const inst = qrRef.current;
+    qrRef.current = null;
+    if (inst) inst.stop().then(() => inst.clear()).catch(() => {});
+  }, []);
+
+  useEffect(() => () => pararScan(), [pararScan]);
+
+  const submeter = useCallback(
+    async (valor) => {
+      const code = String(valor ?? codigo).trim().toUpperCase();
+      setErro("");
+      setCarregando(true);
+      try {
+        const convidado = await validarConvite(code);
+        pararScan();
+        setAbrindo(true);
+        setTimeout(() => onOpen(convidado), 1150);
+      } catch (e) {
+        setErro(e.message || "Não deu certo. Tente de novo.");
+        setCarregando(false);
+      }
+    },
+    [codigo, onOpen, pararScan]
+  );
+
+  const iniciarScan = useCallback(() => {
+    setErro("");
+    if (!window.Html5Qrcode) {
+      setErro("Leitor de QR indisponível aqui — digite o código.");
+      return;
+    }
+    setScan(true);
+    setTimeout(async () => {
+      try {
+        const inst = new window.Html5Qrcode("qr-reader");
+        qrRef.current = inst;
+        await inst.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 220 },
+          (texto) => {
+            pararScan();
+            submeter(extrairCodigo(texto));
+          },
+          () => {}
+        );
+      } catch (e) {
+        setScan(false);
+        setErro("Não consegui abrir a câmera. Digite o código.");
+      }
+    }, 60);
+  }, [pararScan, submeter]);
+
+  const fechar = () => {
+    pararScan();
+    setAberto(false);
+    setErro("");
+  };
+
+  return (
+    <div className={"gate" + (abrindo ? " abrindo" : "")}>
+      <div className="gate-inner">
+        <p className="eyebrow">Gustavo <span className="amp">&amp;</span> Giulia · Ourinhos</p>
+
+        <div className="envelope">
+          <div className="envelope-body" />
+          <div className="envelope-flap" />
+          <button
+            className="wax-seal"
+            onClick={() => {
+              setAberto(true);
+              setErro("");
+            }}
+            aria-label="Abrir o convite"
+          >
+            <Icon name="heart" className="text-[1.15rem]" />
+          </button>
+        </div>
+
+        <div>
+          <p className="font-display text-xl" style={{ fontWeight: 300 }}>Você está convidado</p>
+          <p className="mt-1 text-sm text-muted">Toque no selo de cera para abrir o seu convite.</p>
+        </div>
+      </div>
+
+      {aberto && !abrindo && (
+        <Overlay onClose={fechar}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="eyebrow">Seu convite</p>
+              <p className="font-display mt-1 text-2xl" style={{ fontWeight: 300 }}>Qual o seu código?</p>
+            </div>
+            <button onClick={fechar} className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted transition-colors hover:text-ink" aria-label="Fechar">
+              <Icon name="x" className="text-[0.95rem]" />
+            </button>
+          </div>
+
+          {scan ? (
+            <div className="mt-5 flex flex-col gap-3">
+              <div id="qr-reader" />
+              <button onClick={pararScan} className="btn btn-ghost">Digitar o código</button>
+            </div>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); submeter(); }} className="mt-5 flex flex-col gap-3">
+              <input
+                autoFocus
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/\s/g, "").slice(0, 10))}
+                placeholder="XXXXXX"
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck="false"
+                className="rounded-lg border border-line bg-surface px-3 py-3 text-center font-display text-ink outline-none"
+                style={{ letterSpacing: "0.35em", fontWeight: 400, fontSize: "1.25rem" }}
+                aria-label="Código do convite"
+              />
+              {erro && <p className="text-sm" style={{ color: "#c2603f" }}>{erro}</p>}
+              <button type="submit" disabled={carregando || codigo.length < 4} className="btn btn-primary">
+                {carregando ? <span className="spin" style={{ width: 15, height: 15 }} /> : "Abrir convite"}
+              </button>
+              <button type="button" onClick={iniciarScan} className="flex items-center justify-center gap-2 text-xs text-muted no-underline transition-colors hover:text-ink">
+                <Icon name="scan" className="text-[0.95rem]" />
+                Escanear o QR code do convite
+              </button>
+            </form>
+          )}
+
+          <p className="mt-4 text-center text-xs text-muted">Não recebeu o código? Fale com os noivos.</p>
+        </Overlay>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
  *  App
  * ------------------------------------------------------------------ */
 function App() {
   const { theme, toggle } = useTheme();
   const [modal, setModal] = useState(null);
   const [carregandoId, setCarregandoId] = useState(null);
+  const [convite, setConvite] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("gg-convite") || "null");
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const abrirConvite = useCallback((convidado) => {
+    const dados = { qrcode: convidado.qrcode, name: convidado.name };
+    try {
+      localStorage.setItem("gg-convite", JSON.stringify(dados));
+    } catch (e) {}
+    setConvite(dados);
+  }, []);
 
   // Voltou do checkout da AbacatePay? mostra o "obrigado" e limpa a URL.
   useEffect(() => {
@@ -1298,6 +1623,8 @@ function App() {
 
       {modal?.type === "rsvp" && <RsvpModal onClose={close} />}
       {modal?.type === "obrigado" && <ObrigadoModal onClose={close} />}
+
+      {!convite && <EnvelopeGate onOpen={abrirConvite} />}
     </>
   );
 }
