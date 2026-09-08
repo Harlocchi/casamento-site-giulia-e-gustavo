@@ -91,6 +91,11 @@ redeploy: `npm run convidados:import [caminho.csv]` ou `POST /api/guests/import`
 | `confirmacao_datetime` | `TIMESTAMPTZ DEFAULT now()` | 004 |
 | `status` | `ACTIVE` \| `CANCELLED` — no máx. 1 `ACTIVE` por convidado | 004 |
 
+| `guest_family` | | migração |
+|---|---|---|
+| `id` | PK (ids 1–29 fixos na carga; novos auto) | 005 |
+| `name` | nome da família | 005 |
+
 Helpers em `db.js`: `confirmarPresenca(guestId)` (cancela a anterior e cria nova),
 `cancelarConfirmacao(guestId)`, `confirmacaoDoConvidado(guestId)`.
 
