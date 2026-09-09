@@ -816,7 +816,7 @@ function useCountdown(targetISO) {
 const NAV_LINKS = [
   { href: "#inicio", label: "Início" },
   { href: "#contagem", label: "Contagem" },
-  { href: "#cerimonia", label: "Cerimônia & Festa" },
+  { href: "#cerimonia", label: "Cerimônia & Recepção" },
   { href: "#presentes", label: "Presentes" },
 ];
 
@@ -1055,12 +1055,12 @@ function Venues() {
       <div className="mx-auto max-w-shell px-5 py-24 sm:px-8 sm:py-32">
         <p className="eyebrow">O grande dia</p>
         <h2 className="font-display mt-4 text-3xl sm:text-4xl" style={{ fontWeight: 300 }}>
-          Cerimônia &amp; Festa
+          Cerimônia &amp; Recepção
         </h2>
 
         <div className="mt-10 grid divide-y divide-line rounded-2xl border border-line md:grid-cols-2 md:divide-x md:divide-y-0 md:divide-line">
           <VenueBlock tag="Cerimônia" icon="church" data={WEDDING.cerimonia} extraIcon="clock" />
-          <VenueBlock tag="Festa" icon="wine" data={WEDDING.festa} extraIcon="utensils" />
+          <VenueBlock tag="Recepção" icon="wine" data={WEDDING.festa} extraIcon="utensils" />
         </div>
       </div>
     </section>
